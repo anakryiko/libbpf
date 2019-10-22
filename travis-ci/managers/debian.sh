@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 PHASES=(${@:-SETUP RUN RUN_ASAN CLEANUP})
 DEBIAN_RELEASE="${DEBIAN_RELEASE:-testing}"
 CONT_NAME="${CONT_NAME:-debian-$DEBIAN_RELEASE-$RANDOM}"
@@ -20,8 +22,6 @@ function error() {
 function docker_exec() {
     docker exec $ENV_VARS -it $CONT_NAME "$@"
 }
-
-set -e
 
 source "$(dirname $0)/travis_wait.bash"
 

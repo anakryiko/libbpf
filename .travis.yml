@@ -1,3 +1,5 @@
+arch: amd64
+language: bash
 sudo: required
 dist: xenial
 services:
@@ -9,114 +11,54 @@ env:
         - CI_MANAGERS="$TRAVIS_BUILD_DIR/travis-ci/managers"
         - REPO_ROOT="$TRAVIS_BUILD_DIR"
 
+before_install:
+    - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+    - docker --version
+install: $CI_MANAGERS/debian.sh SETUP
+script: $CI_MANAGERS/debian.sh ${RUN_MODE}
+after_script: $CI_MANAGERS/debian.sh CLEANUP
+
 jobs:
     include:
         - stage: Build & test
-          name: Debian Testing
-          language: bash
+          name: Debian Testing $(RUN_MODE)
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          before_install:
-              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-              - docker --version
-          install:
-              - $CI_MANAGERS/debian.sh SETUP
-          script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN
-              - set +e
-          after_script:
-              - $CI_MANAGERS/debian.sh CLEANUP
+              - RUN_MODE=RUN
 
-        - name: Debian Testing (ASan+UBSan)
-          language: bash
+        - name: Debian Testing (ASan+UBSan) $(arch)
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          before_install:
-              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-              - docker --version
-          install:
-              - $CI_MANAGERS/debian.sh SETUP
-          script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_ASAN
-              - set +e
-          after_script:
-              - $CI_MANAGERS/debian.sh CLEANUP
+              - RUN_MODE=RUN_ASAN
 
         - name: Debian Testing (clang)
-          language: bash
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          before_install:
-              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-              - docker --version
-          install:
-              - $CI_MANAGERS/debian.sh SETUP
-          script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_CLANG
-              - set +e
-          after_script:
-              - $CI_MANAGERS/debian.sh CLEANUP
+              - RUN_MODE=RUN_CLANG
 
         - name: Debian Testing (clang ASan+UBSan)
-          language: bash
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          before_install:
-              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-              - docker --version
-          install:
-              - $CI_MANAGERS/debian.sh SETUP
-          script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_CLANG_ASAN
-              - set +e
-          after_script:
-              - $CI_MANAGERS/debian.sh CLEANUP
+              - RUN_MODE=RUN_CLANG_ASAN
 
         - name: Debian Testing (gcc-8)
-          language: bash
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          before_install:
-              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-              - docker --version
-          install:
-              - $CI_MANAGERS/debian.sh SETUP
-          script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_GCC8
-              - set +e
-          after_script:
-              - $CI_MANAGERS/debian.sh CLEANUP
+              - RUN_MODE=RUN_GCC8
 
         - name: Debian Testing (gcc-8 ASan+UBSan)
-          language: bash
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          before_install:
-              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-              - docker --version
-          install:
-              - $CI_MANAGERS/debian.sh SETUP
-          script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_GCC8_ASAN
-              - set +e
-          after_script:
-              - $CI_MANAGERS/debian.sh CLEANUP
+              - RUN_MODE=RUN_GCC8_ASAN
 
         - name: Ubuntu Xenial
-          language: bash
-          script:
-              - set -e
-              - sudo $CI_MANAGERS/xenial.sh
-              - set +e
+          before_install:
+          install: 
+          script: sudo $CI_MANAGERS/xenial.sh
+          after_script:
