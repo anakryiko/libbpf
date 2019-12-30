@@ -381,6 +381,9 @@ else
 		tr '\n' '\0' < "${PROJECT_NAME}.egg-info/SOURCES.txt"
 	fi
 	} | sudo rsync --files-from=- -0cpt . "$mnt/${PROJECT_NAME}"
+
+	echo "Syncing libraries..."
+	sudo cp /usr/lib/x86_64-linux-gnu/libelf* "$mnt/lib64"
 fi
 
 setup_script="#!/bin/sh
