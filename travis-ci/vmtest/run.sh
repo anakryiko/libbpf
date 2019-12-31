@@ -74,7 +74,7 @@ Miscellaneous:
 	esac
 }
 
-TEMP=$(getopt -o 'k:b:r:fos:ISid:lh' --long 'kernel:,build:,rootfs:,force,one-shot,setup-cmd,skip-image,skip-source:,interactive,dir:,list,help' -n "$0" -- "$@")
+TEMP=$(getopt -o 'k:b:r:fos:ISid:lN:h' --long 'kernel:,build:,rootfs:,force,one-shot,setup-cmd,skip-image,skip-source:,interactive,dir:,list,index:,help' -n "$0" -- "$@")
 eval set -- "$TEMP"
 unset TEMP
 
@@ -83,6 +83,7 @@ unset BUILDDIR
 unset ROOTFSVERSION
 unset IMG
 unset SETUPCMD
+unset INDX
 FORCE=0
 ONESHOT=0
 SKIPIMG=0
@@ -90,6 +91,7 @@ SKIPSOURCE=0
 APPEND=""
 DIR="$PWD"
 LIST=0
+INDX="INDEX"
 while true; do
 	case "$1" in
 		-k|--kernel)
@@ -136,6 +138,10 @@ while true; do
 		-l|--list)
 			LIST=1
 			;;
+		-N|--index)
+			INDX="$2"
+			shift 2
+			;;
 		-h|--help)
 			usage out
 			;;
@@ -175,12 +181,23 @@ cache_urls() {
 	if ! declare -p URLS &> /dev/null; then
 		# This URL contains a mapping from file names to URLs where
 		# those files can be downloaded.
-		local INDEX='https://libbpf-vmtest.s3-us-west-1.amazonaws.com/x86_64/INDEX'
+		local INDEX="https://libbpf-vmtest.s3-us-west-1.amazonaws.com/x86_64/${INDX}"
 		declare -gA URLS
 		while IFS=$'\t' read -r name url; do
 			URLS["$name"]="$url"
 		done < <(curl -LfsS "$INDEX")
 	fi
+}
+
+unset BLACKLIST
+cache_blacklist() {
+  if ! declare -p BLACKLIST &> /dev/null; then
+		local bl='https://libbpf-vmtest.s3-us-west-1.amazonaws.com/x86_64/BLACKLIST'
+    declare -gA BLACKLIST
+    while IFS=$'\t' read -r kernel tests; do
+      BLACKLIST["${kernel}"]="${tests}"
+    done < <(curl -LfsS "${bl}")
+  fi
 }
 
 matching_kernel_releases() {
@@ -367,6 +384,15 @@ else
 	sudo chmod 644 "$vmlinux"
 fi
 
+LIBBPF_PATH="${REPO_ROOT}"
+REPO_PATH="travis-ci/vmtest/bpf-next"
+make CLANG=clang-10 LLC=llc-10 LLVM_STRIP=llvm-strip-10 VMLINUX_BTF="${vmlinux}" -C "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" -j $((4*$(nproc)))
+mkdir ${LIBBPF_PATH}/selftests
+cp -R "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" ${LIBBPF_PATH}/selftests
+cd ${LIBBPF_PATH}
+rm selftests/bpf/.gitignore
+git add selftests
+
 if (( SKIPSOURCE )); then
 	echo "Not copying source files..." >&2
 else
@@ -389,17 +415,23 @@ echo 'Skipping setup commands'
 echo 0 > /exitstatus
 chmod 644 /exitstatus"
 
+cache_blacklist
+
 # Create the init scripts.
 if [[ ! -z SETUPCMD ]]; then
 	# Unescape whitespace characters.
 	setup_cmd=$(sed 's/\(\\\)\([[:space:]]\)/\2/g' <<< "${SETUPCMD}")
+  kernelrelease="${KERNELRELEASE}"
+  if [[ -v BUILDDIR ]]; then kernelrelease='LATEST'; fi
+	setup_envvars="export BLACKLIST=${BLACKLIST[$kernelrelease]:+${BLACKLIST[$kernelrelease]}}"
 	setup_script=$(printf "#!/bin/sh
 set -e
 
 echo 'Running setup commands'
 %s
+%s
 echo $? > /exitstatus
-chmod 644 /exitstatus" "${setup_cmd}")
+chmod 644 /exitstatus" "${setup_envvars}" "${setup_cmd}")
 fi
 
 echo "${setup_script}" | sudo tee "$mnt/etc/rcS.d/S50-run-tests" > /dev/null
