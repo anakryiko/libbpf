@@ -7,6 +7,5 @@ send_signal
 skb_ctx
 sockmap_listen
 sockopt_inherit
-spinlock
 tcp_rtt
 test_global_funcs

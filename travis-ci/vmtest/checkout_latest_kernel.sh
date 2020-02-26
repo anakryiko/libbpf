@@ -6,7 +6,8 @@ CWD=$(pwd)
 LIBBPF_PATH=$(pwd)
 REPO_PATH=$1
 
-BPF_NEXT_ORIGIN=https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git
+#BPF_NEXT_ORIGIN=https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git
+BPF_NEXT_ORIGIN=https://github.com/anakryiko/linux.git
 LINUX_SHA=$(cat ${LIBBPF_PATH}/CHECKPOINT-COMMIT)
 
 echo REPO_PATH = ${REPO_PATH}
