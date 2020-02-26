@@ -1,6 +1,3 @@
-send_signal_tracepoint
-send_signal_tracepoint_thread
 sockmap_listen
 sockopt_inherit
-spinlock
 tcp_rtt
