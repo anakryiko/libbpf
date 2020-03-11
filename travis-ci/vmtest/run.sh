@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -uo pipefail
+set -xuo pipefail
 trap 'exit 2' ERR
 
 usage () {
