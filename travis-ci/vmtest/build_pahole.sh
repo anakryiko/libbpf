@@ -8,14 +8,14 @@ travis_fold start build_pahole "Building pahole"
 
 CWD=$(pwd)
 REPO_PATH=$1
-PAHOLE_ORIGIN=https://git.kernel.org/pub/scm/devel/pahole/pahole.git
+PAHOLE_ORIGIN=https://github.com/anakryiko/pahole.git
 
 mkdir -p ${REPO_PATH}
 cd ${REPO_PATH}
 git init
 git remote add origin ${PAHOLE_ORIGIN}
 git fetch origin
-git checkout master
+git checkout cmake-fix-uapi-headers
 
 mkdir -p build
 cd build
