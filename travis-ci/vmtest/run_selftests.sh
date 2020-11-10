@@ -41,6 +41,8 @@ if [[ -s "${whitelist_path}" ]]; then
 	WHITELIST=$(cat "${whitelist_path}" | cut -d'#' -f1 | tr -s '[:space:]' ',')
 fi
 
+lsmod
+
 cd libbpf/selftests/bpf
 
 test_progs
