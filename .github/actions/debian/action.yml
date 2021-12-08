@@ -7,7 +7,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: |
+    - name: Debian setup
+      run: |
         source /tmp/ci_setup
         bash -x $CI_ROOT/managers/debian.sh SETUP
         bash -x $CI_ROOT/managers/debian.sh ${{ inputs.target }}

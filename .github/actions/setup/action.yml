@@ -4,6 +4,7 @@ runs:
   using: "composite"
   steps:
     - id: variables
+      name: SETUP TESTTESTTEST
       run: |
         export REPO_ROOT=$GITHUB_WORKSPACE
         export CI_ROOT=$REPO_ROOT/travis-ci
